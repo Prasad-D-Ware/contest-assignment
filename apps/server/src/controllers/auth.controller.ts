@@ -1,7 +1,7 @@
 import prisma from "@contest-assignment/db";
 import bcrypt from "bcryptjs";
 import type { Request, Response } from "express"
-import { signupSchema } from "types/input-schema";
+import { signupSchema, signinSchema } from "types/input-schema";
 import jwt from "jsonwebtoken";
 
 export const JWT_SECRET = "12321";
@@ -13,7 +13,7 @@ const signup = async (req : Request,res : Response) => {
         if(!success) {
             res.status(400).json({
                 success : false,
-                message : null,
+                data : null,
                 error :  "INVALID_REQUEST"
             })
             return;
@@ -71,12 +71,12 @@ const signup = async (req : Request,res : Response) => {
 
 const signin = async (req : Request,res : Response) => {
     try {
-        const { success , data} = signupSchema.safeParse(req.body);
+        const { success , data} = signinSchema.safeParse(req.body);
 
           if(!success) {
             res.status(400).json({
                 success : false,
-                message : null,
+                data : null,
                 error :  "INVALID_REQUEST"
             })
             return;
