@@ -19,7 +19,7 @@ const signup = async (req : Request,res : Response) => {
             return;
         }
 
-        const { name, email ,password , role } = data;
+        const { name, email ,password , role = "contestee" } = data;
 
         const existing = await prisma.user.findUnique({
             where : {
@@ -36,13 +36,13 @@ const signup = async (req : Request,res : Response) => {
             return;
         }
 
-        const hashPassword = await bcrypt.hash(password,"10"); 
+        const hashPassword = await bcrypt.hash(password, 10);
         
         const user = await prisma.user.create({
             data : {
                 email,
                 password : hashPassword,
-                role,
+                role: role || "contestee",
                 name
             }
         });

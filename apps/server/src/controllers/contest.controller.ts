@@ -39,8 +39,8 @@ const createContest = async (req: Request, res: Response) => {
                   "title": contest.title,
                   "description": contest.description,
                   "creatorId": contest.creatorId,
-                  "startTime": contest.start_time,
-                  "endTime": contest.end_time
+                  "startTime": contest.start_time.toISOString(),
+                  "endTime": contest.end_time.toISOString()
                 },
                 "error": null
               }
@@ -59,6 +59,7 @@ const getContest = async (req: Request, res: Response) => {
     try {
 
         const { id : contestId } = req.params as { id : string};
+        const userRole = (req as AuthenticatedRequest).user.role;
 
         if(!contestId) {
             res.status(400).json({
@@ -80,6 +81,7 @@ const getContest = async (req: Request, res: Response) => {
                         questionText : true,
                         options : true,
                         points : true,
+                        correct_option_index : true,
                     }
                 },
                 DsaQuestions : {
@@ -106,9 +108,44 @@ const getContest = async (req: Request, res: Response) => {
             return;
         }
 
+        // Format MCQs - exclude correctOptionIndex for contestees
+        const mcqs = contest.McqQuestions.map(mcq => {
+            const formatted: any = {
+                id: mcq.id,
+                questionText: mcq.questionText,
+                options: mcq.options,
+                points: mcq.points,
+            };
+            // Only include correctOptionIndex for creators
+            if (userRole === 'creator') {
+                formatted.correctOptionIndex = mcq.correct_option_index;
+            }
+            return formatted;
+        });
+
+        // Format DSA problems with camelCase
+        const dsaProblems = contest.DsaQuestions.map(dsa => ({
+            id: dsa.id,
+            title: dsa.title,
+            description: dsa.description,
+            tags: dsa.tags,
+            points: dsa.points,
+            timeLimit: dsa.time_limit,
+            memoryLimit: dsa.memory_limit,
+        }));
+
         res.status(200).json({
             success: true,
-            data: contest,
+            data: {
+                id: contest.id,
+                title: contest.title,
+                description: contest.description,
+                creatorId: contest.creatorId,
+                startTime: contest.start_time.toISOString(),
+                endTime: contest.end_time.toISOString(),
+                mcqs,
+                dsaProblems,
+            },
             error: null
         })
         return;
@@ -215,8 +252,7 @@ const submitMcqQuestion = async (req: Request, res: Response) => {
 
         const contest = await prisma.contest.findUnique({
             where : {
-                id : contestId,
-                creatorId : userId
+                id : contestId
             }
         })
         

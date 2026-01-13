@@ -4,7 +4,7 @@ export const signupSchema = z.object({
         name: z.string(),
         email: z.email(),
         password : z.string(),
-        role: z.enum(["contestee","creator"])
+        role: z.enum(["contestee","creator"]).optional().default("contestee")
 })
 
 export const signinSchema = z.object({
